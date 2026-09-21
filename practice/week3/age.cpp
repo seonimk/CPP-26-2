@@ -2,8 +2,8 @@
 using namespace std;
 
 int main(){
-    int age;                        // 나이
-    cout << "나이를 입력하세요 !! : ";
+    int age;         // 나이
+    cout << "나이를 입력해주세요 : ";
     cin >> age;
 
     if (age <=12) {
