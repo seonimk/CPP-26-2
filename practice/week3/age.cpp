@@ -3,7 +3,7 @@ using namespace std;
 
 int main(){
     int age;                        // 나이
-    cout << "나이를 입력하세요 !! : ";
+    cout << "나이를 입력해라: ";
     cin >> age;
 
     if (age <=12) {
