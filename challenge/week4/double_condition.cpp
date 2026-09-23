@@ -9,7 +9,7 @@ int main() {
 
     if (num1 > 0) {
         if (num2 > 0) {
-            cout << num1 << num2 << "두 숫자 모두 양수입나다.\n" << endl;
+            cout << num1 , num2 << "두 숫자 모두 양수입나다.\n" << endl;
         }
         else {
             cout << num1 << "만 양수입나다.\n" << endl;
