@@ -2,15 +2,18 @@
 #include <string>
 using namespace std;
 
+// 맵의 가로, 세로 크기
 const int mapX = 5;
 const int mapY = 5;
+int currentHP = 20;		// 유저의 현재 HP
 
 // 사용자 정의 함수
 bool checkXY(int user_x, int mapX, int user_y, int mapY);
 void displayMap(int map[][mapX], int user_x, int user_y);
 bool checkGoal(int map[][mapX], int user_x, int user_y);
-bool checkOutOfMap(int user_x, int mapX, int user_y, int mapY);
+bool checkOutOfMap(int& user_x, int mapX, int& user_y, int mapY);
 void decreaseHP(int& currentHP);
+void checkState(int map[][mapX], int user_x, int user_y);
 
 // 메인  함수
 int main() {
@@ -26,10 +29,7 @@ int main() {
 	int user_x = 0; // 가로 번호
 	int user_y = 0; // 세로 번호
 
-	// 유저의 현재 HP
-	int currentHP = 20;
-
-	// 게임 시작 
+	// 게임 시작
 	while (1) { // 사용자에게 계속 입력받기 위해 무한 루프
 
 		// 사용자의 입력을 저장할 변수
@@ -42,47 +42,45 @@ int main() {
 		if (user_input == "상") {
 			// 위로 한 칸 올라가기
 			user_y -= 1;
-			checkOutOfMap(user_x, mapX, user_y, mapY);
-			if (!checkOutOfMap(user_x, mapX, user_y, mapY)) {
+			if (!checkOutOfMap(user_x, mapX, user_y, mapY)) {	// 맵 안이면 이동 성공
 				cout << "위로 한 칸 올라갑니다." << endl;
 				decreaseHP(currentHP);
 				displayMap(map, user_x, user_y);
+				checkState(map, user_x, user_y);
 			}
-			
 		}
 		else if (user_input == "하") {
-			// TODO: 아래로 한 칸 내려가기
+			// 아래로 한 칸 내려가기
 			user_y += 1;
-			checkOutOfMap(user_x, mapX, user_y, mapY);
 			if (!checkOutOfMap(user_x, mapX, user_y, mapY)) {
-				cout << "위로 한 칸 내려갑니다." << endl;
+				cout << "아래로 한 칸 내려갑니다." << endl;
 				decreaseHP(currentHP);
 				displayMap(map, user_x, user_y);
+				checkState(map, user_x, user_y);
+			}
 		}
 		else if (user_input == "좌") {
-			// TODO: 왼쪽으로 이동하기
+			// 왼쪽으로 이동하기
 			user_x -= 1;
-			checkOutOfMap(user_x, mapX, user_y, mapY);
-
 			if (!checkOutOfMap(user_x, mapX, user_y, mapY)) {
 				cout << "왼쪽으로 이동합니다." << endl;
 				decreaseHP(currentHP);
 				displayMap(map, user_x, user_y);
+				checkState(map, user_x, user_y);
 			}
 		}
 		else if (user_input == "우") {
-			// TODO: 오른쪽으로 이동하기
+			// 오른쪽으로 이동하기
 			user_x += 1;
-			checkOutOfMap(user_x, mapX, user_y, mapY);
-
 			if (!checkOutOfMap(user_x, mapX, user_y, mapY)) {
 				cout << "오른쪽으로 이동합니다." << endl;
 				decreaseHP(currentHP);
 				displayMap(map, user_x, user_y);
+				checkState(map, user_x, user_y);
 			}
 		}
 		else if (user_input == "지도") {
-			// TODO: 지도 보여주기 함수 호출
+			// 지도 보여주기 함수 호출 (이동하지 않으므로 HP 변화 없음)
 			displayMap(map, user_x, user_y);
 		}
 		else if (user_input == "종료") {
@@ -94,6 +92,13 @@ int main() {
 			continue;
 		}
 
+		// HP가 0 이하가 되면 실패 후 종료
+		if (currentHP <= 0) {
+			cout << "HP가 0 이하가 되었습니다. 실패했습니다." << endl;
+			cout << "게임을 종료합니다." << endl;
+			break;
+		}
+
 		// 목적지에 도달했는지 체크
 		bool finish = checkGoal(map, user_x, user_y);
 		if (finish == true) {
@@ -101,25 +106,6 @@ int main() {
 			cout << "게임을 종료합니다." << endl;
 			break;
 		}
-
-		// 현재 위치에 아이템, 적, 포션이 있는지 체크
-		int posState = map[user_y][user_x];
-		if (posState == 1 || posState == 2 || posState == 3) {
-			switch (posState) {
-				case 1:
-					cout << "아이템이 있습니다." << endl;
-					break;
-				case 2:
-					cout << "적이 있습니다. HP가 2 줄어듭니다." << endl;
-					currentHP -= 2; // 적을 만나면 체력 2 감소
-					break;
-				case 3:
-					cout << "포션이 있습니다. HP가 2 회복됩니다." << endl;
-					currentHP += 2; // 포션을 만나면 체력 2 회복
-					break;
-			}
-		}
-
 	}
 	return 0;
 }
@@ -175,23 +161,36 @@ bool checkGoal(int map[][mapX], int user_x, int user_y) {
 	}
 	return false;
 }
-// 사용자가 맵을 벗어났다고 출력해주고 다시 돌아가는 함수
-bool checkOutOfMap(int user_x, int mapX, int user_y, int mapY) {
+
+// 맵을 벗어났으면 메시지를 출력하고 맵 안으로 되돌리는 함수
+bool checkOutOfMap(int& user_x, int mapX, int& user_y, int mapY) {
 	bool inMap = checkXY(user_x, mapX, user_y, mapY);
 	if (!inMap) {
 		cout << "맵을 벗어났습니다. 다시 돌아갑니다." << endl;
 		user_x = (user_x < 0) ? 0 : (user_x >= mapX) ? mapX - 1 : user_x;
 		user_y = (user_y < 0) ? 0 : (user_y >= mapY) ? mapY - 1 : user_y;
-	};
-	return inMap;
+	}
+	return !inMap;
 }
 
 // 사용자가 이동할 때 마다 사용자 체력 1씩 감소하는 함수
 void decreaseHP(int& currentHP) {
 	currentHP -= 1;
-	if (currentHP <= 0) {
-		currentHP = 0;
-		cout << "HP가 0이 되었습니다. 실패했습니다." << endl;
-		cout << "게임을 종료합니다." << endl;
+}
+
+// 유저가 이동한 칸에 무엇이 있는지 확인해서 메시지를 출력하고 HP를 바꾸는 함수
+void checkState(int map[][mapX], int user_x, int user_y) {
+	switch (map[user_y][user_x]) {
+	case 1:     // 아이템
+		cout << "아이템이 있습니다." << endl;
+		break;
+	case 2:     // 적: HP 2 감소
+		currentHP -= 2;
+		cout << "적이 있습니다. HP가 2 줄어듭니다." << endl;
+		break;
+	case 3:     // 포션: HP 2 회복
+		currentHP += 2;
+		cout << "포션이 있습니다. HP가 2 회복됩니다." << endl;
+		break;
 	}
 }
