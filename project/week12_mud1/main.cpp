@@ -40,6 +40,7 @@ int main() {
 		string user_input = "";
 
 		// 확장 당일 3 : hp 출력은 객체의 GetHP 멤버 함수 호출로 진행
+		// 확장 숙제 할 일 3-1 : 명령어 목록에 "정보" 추가
 		cout << "현재 HP : " << user.GetHP() << " " << "명령어를 입력하세요 (상, 하, 좌, 우, 지도, 종료) : ";
 		cin >> user_input;
 
