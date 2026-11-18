@@ -1,0 +1,296 @@
+// 머드게임 메인부
+#include <iostream>
+#include <string>
+#include <vector>
+#include "user.h"
+using namespace std;
+
+// 맵의 가로, 세로 크기
+const int mapX = 5;
+const int mapY = 5;
+
+// 사용자 정의 함수
+bool checkXY(int user_x, int mapX, int user_y, int mapY);
+void displayMap(const vector<vector<int>>& map, int user_x, int user_y);
+bool checkGoal(const vector<vector<int>>& map, int user_x, int user_y);
+bool checkOutOfMap(int& user_x, int mapX, int& user_y, int mapY);
+void checkState(const vector<vector<int>>& map, int user_x, int user_y, User& user);
+bool CheckUser(User user);
+
+// 메인 함수
+int main() {
+	// 0은 빈 공간, 1은 아이템, 2는 적, 3은 포션, 4는 목적지
+	// 확장 숙제 할 일 1 : 2차원 배열 대신 2차원 벡터로 지도 선언
+	vector<vector<int>> map = { {0, 1, 2, 0, 4},
+					{1, 0, 0, 2, 0},
+					{0, 0, 0, 0, 0},
+					{0, 2, 3, 0, 0},
+					{3, 0, 0, 0, 2} };
+
+
+	// Magician과 Warrior 두 명의 유저 객체 생성
+	Magician magician;
+	Warrior warrior;
+
+	// 유저별 위치를 저장할 배열 ([0]은 Magician, [1]은 Warrior)
+	int pos_x[2] = { 0, 0 }; // 가로 번호
+	int pos_y[2] = { 0, 0 }; // 세로 번호
+
+	// 지금 누구 차례인지 저장하는 변수 (0이면 Magician, 1이면 Warrior)
+	int turn = 0;
+
+	// 게임 시작
+	while (1) { // 사용자에게 계속 입력받기 위해 무한 루프
+
+		// 이번 차례 유저 고르기 (상대 유저도 같이 정해둠)
+		User* curUser = &magician;
+		User* otherUser = &warrior;
+		string userName = "Magician";
+		string otherName = "Warrior";
+		int otherTurn = 1;			// 상대 유저의 번호 (위치 배열에서 쓰기 위함)
+		if (turn == 1) {
+			curUser = &warrior;
+			otherUser = &magician;
+			userName = "Warrior";
+			otherName = "Magician";
+			otherTurn = 0;
+		}
+		User& user = *curUser;
+		User& other = *otherUser;	// 상대 유저
+		int& user_x = pos_x[turn];
+		int& user_y = pos_y[turn];
+
+		// 이번 턴에 실제로 이동했는지 저장 (이동했을 때만 차례가 넘어감)
+		bool moved = false;
+
+		// 사용자의 입력을 저장할 변수
+		string user_input = "";
+
+		// 확장 숙제 할 일 3-1 : hp 출력은 객체의 GetHP 멤버 함수 호출로 진행
+		// 누구 차례인지도 같이 출력
+		cout << "[" << userName << " 차례] 현재 HP : " << user.GetHP() << " " << "명령어를 입력하세요 (상, 하, 좌, 우, 지도, 정보, 종료) : ";
+		cin >> user_input;
+
+		// 이동 명령어 처리
+		if (user_input == "상") {
+			// 위로 한 칸 올라가기
+			user_y -= 1;
+			if (!checkOutOfMap(user_x, mapX, user_y, mapY)) {	// 맵 안이면 이동 성공
+				cout << "위로 한 칸 올라갑니다." << endl;
+				// 확장 당일 2 : 이동하면 객체의 DecreaseHP로 hp 1 감소
+				user.DecreaseHP(1);
+				displayMap(map, user_x, user_y);
+				checkState(map, user_x, user_y, user);
+				moved = true;	// 이동 성공
+			}
+		}
+		else if (user_input == "하") {
+			// 아래로 한 칸 내려가기
+			user_y += 1;
+			if (!checkOutOfMap(user_x, mapX, user_y, mapY)) {
+				cout << "아래로 한 칸 내려갑니다." << endl;
+				// 확장 당일 2 : 이동하면 객체의 DecreaseHP로 hp 1 감소
+				user.DecreaseHP(1);
+				displayMap(map, user_x, user_y);
+				checkState(map, user_x, user_y, user);
+				moved = true;	// mud3 확장 : 이동 성공
+			}
+		}
+		else if (user_input == "좌") {
+			// 왼쪽으로 이동하기
+			user_x -= 1;
+			if (!checkOutOfMap(user_x, mapX, user_y, mapY)) {
+				cout << "왼쪽으로 이동합니다." << endl;
+				// 확장 당일 2 : 이동하면 객체의 DecreaseHP로 hp 1 감소
+				user.DecreaseHP(1);
+				displayMap(map, user_x, user_y);
+				checkState(map, user_x, user_y, user);
+				moved = true;	// mud3 확장 : 이동 성공
+			}
+		}
+		else if (user_input == "우") {
+			// 오른쪽으로 이동하기
+			user_x += 1;
+			if (!checkOutOfMap(user_x, mapX, user_y, mapY)) {
+				cout << "오른쪽으로 이동합니다." << endl;
+				// 확장 당일 2 : 이동하면 객체의 DecreaseHP로 hp 1 감소
+				user.DecreaseHP(1);
+				displayMap(map, user_x, user_y);
+				checkState(map, user_x, user_y, user);
+				moved = true;	// mud3 확장 : 이동 성공
+			}
+		}
+		else if (user_input == "지도") {
+			// 지도 보여주기 함수 호출 (이동하지 않으므로 HP 변화 없음)
+			displayMap(map, user_x, user_y);
+		}
+		else if (user_input == "정보") {
+			// 확장 숙제 할 일 3-2 : 중복 정의한 << 연산자로 현재 유저 정보 출력 (이동하지 않으므로 HP 변화 없음)
+			cout << user << endl;
+		}
+		else if (user_input == "종료") {
+			cout << "종료합니다.";
+			break;
+		}
+		else {
+			cout << "잘못된 입력입니다." << endl;
+			continue;
+		}
+
+		// 이동한 칸에 적이 있으면 이번 차례 유저가 공격
+		if (moved == true && map[user_y][user_x] == 2) {
+			if (turn == 0) {
+				magician.doAttack();	// "마법 사용"
+			}
+			else {
+				warrior.doAttack();		// "베기 사용"
+			}
+		}
+
+		// 이동한 칸에 상대 유저가 있으면 둘이 싸움
+		// 두 유저가 서로 한 번씩 공격하고, 공격받은 유저는 HP가 3 감소
+		// (한 칸씩 번갈아 움직이면 항상 같은 유저만 상대 칸에 도착하게 되므로, 공평하게 서로 공격)
+		if (moved == true && user_x == pos_x[otherTurn] && user_y == pos_y[otherTurn]) {
+			cout << otherName << "을(를) 만났습니다! 싸움이 시작됩니다." << endl;
+			cout << "Magician : ";
+			magician.doAttack();	// "마법 사용"
+			warrior.DecreaseHP(3);
+			cout << "Warrior : ";
+			warrior.doAttack();		// "베기 사용"
+			magician.DecreaseHP(3);
+			cout << "서로 공격해서 두 유저의 HP가 3씩 줄어듭니다. (Magician HP : " << magician.GetHP()
+				<< ", Warrior HP : " << warrior.GetHP() << ")" << endl;
+		}
+
+		// 싸움으로 두 유저의 HP가 동시에 0 이하가 되면 무승부
+		if (CheckUser(user) == false && CheckUser(other) == false) {
+			cout << "두 유저의 HP가 모두 0 이하가 되었습니다. 무승부!" << endl;
+			cout << "게임을 종료합니다." << endl;
+			break;
+		}
+
+		// 확장 당일 6 : CheckUser() 함수를 적절한 위치에서 사용
+		// CheckUser()로 유저가 살아있는지 확인, false면 실패 후 종료
+		if (CheckUser(user) == false) {
+			cout << userName << "의 HP가 0 이하가 되었습니다. 실패했습니다." << endl;
+			cout << "게임을 종료합니다." << endl;
+			break;
+		}
+
+		// 싸움으로 상대 유저의 HP가 0 이하가 되면 이번 차례 유저의 승리
+		if (CheckUser(other) == false) {
+			cout << otherName << "의 HP가 0 이하가 되었습니다. " << userName << "의 승리!" << endl;
+			cout << "게임을 종료합니다." << endl;
+			break;
+		}
+
+		// 목적지에 도달했는지 체크
+		bool finish = checkGoal(map, user_x, user_y);
+		if (finish == true) {
+			cout << userName << "이(가) 목적지에 도착했습니다! 축하합니다!" << endl;
+			cout << "게임을 종료합니다." << endl;
+			break;
+		}
+
+		// 이동했으면 다음 유저에게 차례 넘기기 (지도, 정보, 맵 밖 이동은 차례 유지)
+		if (moved == true) {
+			if (turn == 0) {
+				turn = 1;
+			}
+			else {
+				turn = 0;
+			}
+		}
+	}
+	return 0;
+}
+
+
+// 지도와 사용자 위치 출력하는 함수
+void displayMap(const vector<vector<int>>& map, int user_x, int user_y) {
+	for (int i = 0; i < mapY; i++) {
+		for (int j = 0; j < mapX; j++) {
+			if (i == user_y && j == user_x) {
+				cout << " USER |"; // 양 옆 1칸 공백
+			}
+			else {
+				int posState = map[i][j];
+				switch (posState) {
+				case 0:
+					cout << "      |"; // 6칸 공백
+					break;
+				case 1:
+					cout << "아이템|";
+					break;
+				case 2:
+					cout << "  적  |"; // 양 옆 2칸 공백
+					break;
+				case 3:
+					cout << " 포션 |"; // 양 옆 1칸 공백
+					break;
+				case 4:
+					cout << "목적지|";
+					break;
+				}
+			}
+		}
+		cout << endl;
+		cout << " -------------------------------- " << endl;
+	}
+}
+
+// 이동하려는 곳이 유효한 좌표인지 체크하는 함수
+bool checkXY(int user_x, int mapX, int user_y, int mapY) {
+	bool checkFlag = false;
+	if (user_x >= 0 && user_x < mapX && user_y >= 0 && user_y < mapY) {
+		checkFlag = true;
+	}
+	return checkFlag;
+}
+
+// 유저의 위치가 목적지인지 체크하는 함수
+bool checkGoal(const vector<vector<int>>& map, int user_x, int user_y) {
+	// 목적지 도착하면
+	if (map[user_y][user_x] == 4) {
+		return true;
+	}
+	return false;
+}
+
+// 맵을 벗어났으면 메시지를 출력하고 맵 안으로 되돌리는 함수
+bool checkOutOfMap(int& user_x, int mapX, int& user_y, int mapY) {
+	bool inMap = checkXY(user_x, mapX, user_y, mapY);
+	if (!inMap) {
+		cout << "맵을 벗어났습니다. 다시 돌아갑니다." << endl;
+		user_x = (user_x < 0) ? 0 : (user_x >= mapX) ? mapX - 1 : user_x;
+		user_y = (user_y < 0) ? 0 : (user_y >= mapY) ? mapY - 1 : user_y;
+	}
+	return !inMap;
+}
+
+// 유저가 이동한 칸에 무엇이 있는지 확인해서 메시지를 출력하고 HP를 바꾸는 함수
+void checkState(const vector<vector<int>>& map, int user_x, int user_y, User& user) {
+	switch (map[user_y][user_x]) {
+	case 1:     // 확장 숙제 할 일 3-3 : 아이템: 먹은 아이템 개수 1 증가
+		user.IncreaseItemCnt();
+		cout << "아이템이 있습니다. 아이템을 먹었습니다." << endl;
+		break;
+	case 2:     // 적: HP 2 감소
+		user.DecreaseHP(2);
+		cout << "적이 있습니다. HP가 2 줄어듭니다." << endl;
+		break;
+	case 3:     // 확장 당일 4 : 포션: 객체의 IncreaseHP로 HP 2 증가
+		user.IncreaseHP(2);
+		cout << "포션이 있습니다. HP가 2 회복됩니다." << endl;
+		break;
+	}
+}
+
+// 확장 당일 5 : bool CheckUser(User user) 함수 생성
+// 	            User 객체를 넣으면 hp가 0인지 체크하고, 0이라면 false를 반환, 그렇지 않다면 true를 반환
+bool CheckUser(User user) {
+	if (user.GetHP() <= 0) {
+		return false;
+	}
+	return true;
+}
