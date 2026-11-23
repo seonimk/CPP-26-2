@@ -11,6 +11,7 @@ int main(){
     for ( int i = 1; i <= n; i++)
        fact = fact * i;
     cout <<n << "!은 " << fact <<"입니다.\n"<< endl;
+    
     return 0;
     
 }

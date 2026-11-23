@@ -5,7 +5,7 @@ using namespace std;
 int main()
 {
     int *ptr;
-    srand(tume(NULL));  // 난수 발생기 시드 설정
+    srand(time(NULL));  // 난수 발생기 시드 설정
     ptr = new int[10];  // 동적 메모리 할당
 
     for (int i = 0; i < 10; i++) {

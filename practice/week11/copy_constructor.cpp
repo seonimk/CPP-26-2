@@ -10,6 +10,12 @@ public:
     ~MyArray();
 };
 
+// 생성자 : size만큼 배열을 동적 할당
+MyArray::MyArray(int size) {
+    this->size = size;
+    data = new int[size];
+}
+
 MyArray::MyArray(const MyArray& other) {
     this->size = other.size;
     data = new int[size];
